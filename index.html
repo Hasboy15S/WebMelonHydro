@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Smart Hydroponic · Dashboard</title>
+<script src="js/firebase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ══ TOPBAR ══════════════════════════════════ -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <div class="dot"></div>
+    Smart <em>&nbsp;Hydroponic</em>
+  </div>
+  <nav class="topbar-nav">
+    <a href="#" class="active">Dashboard</a>
+    <a href="#">Data Penyakit</a>
+    <a href="#">Grafik Pertumbuhan</a>
+  </nav>
+  <div class="topbar-right">
+    <div class="ico-btn">⚙</div>
+    <div class="ico-btn">🔔</div>
+    <div class="ico-btn">⬡</div>
+    <span id="clock-top">--:--:--</span>
+  </div>
+</div>
+
+<!-- ══ DASHBOARD GRID ═══════════════════════════ -->
+<div class="dashboard">
+
+  <!-- ── LEFT COLUMN ──────────────────────────── -->
+  <div class="col-left">
+
+    <!-- GAUGE: pH -->
+    <div class="gauge-panel">
+      <div class="gauge-label">Tingkat pH</div>
+      <div class="gauge-wrap">
+        <svg class="gauge-svg" viewBox="0 0 130 70">
+          <defs>
+            <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#ff3d57"/>
+              <stop offset="50%" stop-color="#00c2ff"/>
+              <stop offset="100%" stop-color="#00e676"/>
+            </linearGradient>
+          </defs>
+          <!-- track -->
+          <path d="M10,65 A55,55 0 0,1 120,65" fill="none" stroke="#2a3040" stroke-width="10" stroke-linecap="round"/>
+          <!-- fill -->
+          <path id="gauge-ph-fill" d="M10,65 A55,55 0 0,1 120,65" fill="none" stroke="url(#g1)" stroke-width="10" stroke-linecap="round"
+            stroke-dasharray="173" stroke-dashoffset="0"/>
+          <!-- needle -->
+          <line id="gauge-ph-needle" x1="65" y1="65" x2="65" y2="18" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"
+            transform="rotate(0,65,65)" opacity=".6"/>
+          <circle cx="65" cy="65" r="4" fill="#2a3040" stroke="var(--accent)" stroke-width="1.5"/>
+        </svg>
+        <div class="gauge-value" id="val-ph">6.5</div>
+      </div>
+      <div class="gauge-range"><span>4</span><span>7</span><span>10</span></div>
+      <span class="metric-badge badge-ok" id="badge-ph">NORMAL</span>
+    </div>
+
+    <!-- GAUGE: EC -->
+    <div class="gauge-panel" style="border-top:1px solid var(--border);">
+      <div class="gauge-label">EC Nutrisi</div>
+      <div class="gauge-wrap">
+        <svg class="gauge-svg" viewBox="0 0 130 70">
+          <path d="M10,65 A55,55 0 0,1 120,65" fill="none" stroke="#2a3040" stroke-width="10" stroke-linecap="round"/>
+          <path id="gauge-ec-fill" d="M10,65 A55,55 0 0,1 120,65" fill="none" stroke="#ffab00" stroke-width="10" stroke-linecap="round"
+            stroke-dasharray="173" stroke-dashoffset="86"/>
+          <line id="gauge-ec-needle" x1="65" y1="65" x2="65" y2="18" stroke="#fff" stroke-width="1.5" stroke-linecap="round"
+            transform="rotate(0,65,65)" opacity=".6"/>
+          <circle cx="65" cy="65" r="4" fill="#2a3040" stroke="#ffab00" stroke-width="1.5"/>
+        </svg>
+        <div class="gauge-value" style="color:var(--amber)" id="val-ec">1.8</div>
+      </div>
+      <div class="gauge-range"><span>0</span><span>2</span><span>4</span></div>
+      <span class="metric-badge badge-ok" id="badge-ec">NORMAL</span>
+    </div>
+
+    <!-- METRIC: Suhu -->
+    <div class="metric-card" style="flex:0 0 auto;">
+      <div class="metric-name">Suhu Udara</div>
+      <div class="metric-row">
+        <div class="metric-val v-green" id="val-suhu">24.3</div>
+        <div class="metric-unit">°C</div>
+      </div>
+      <div class="metric-sub" id="sub-suhu">2025-04-24 · 14:52</div>
+      <span class="metric-badge badge-ok">OPTIMAL</span>
+    </div>
+
+    <!-- METRIC: Kelembapan -->
+    <div class="metric-card" style="flex:0 0 auto;">
+      <div class="metric-name">Kelembapan</div>
+      <div class="metric-row">
+        <div class="metric-val v-accent" id="val-hum">68</div>
+        <div class="metric-unit">%</div>
+      </div>
+      <div class="metric-sub" id="sub-hum">2025-04-24 · 14:52</div>
+      <span class="metric-badge badge-ok">NORMAL</span>
+    </div>
+
+    <!-- METRIC: Cahaya -->
+    <div class="metric-card" style="flex:0 0 auto;">
+      <div class="metric-name">Intensitas Cahaya</div>
+      <div class="metric-row">
+        <div class="metric-val v-amber" id="val-lux">5420</div>
+        <div class="metric-unit">lux</div>
+      </div>
+      <div class="metric-sub">Luminositas area tanam</div>
+      <span class="metric-badge badge-warn">RENDAH</span>
+    </div>
+
+    <div class="fill"></div>
+  </div>
+
+  <!-- ── CENTER: TOP ───────────────────────────── -->
+  <div class="center-top">
+
+    <!-- CAMERA FEED -->
+    <div class="cam-panel panel">
+      <div class="panel-head">
+        <div class="panel-title"><span class="t-dot"></span>Kamera Tanaman</div>
+        <div class="panel-icons"><span>⤢</span><span>⚙</span></div>
+      </div>
+      <div class="cam-feed">
+        <div class="cam-overlay"></div>
+        <div class="cam-scanline"></div>
+        <div class="cam-info">
+          <span id="cam-ts">2025-04-24 14:52:00</span>
+          <span>CAM-01 · AREA A</span>
+          <span>1080p · 30fps</span>
+        </div>
+        <div class="cam-rec"><div class="rdot"></div>REC</div>
+        <div class="cam-placeholder">
+          <!-- Camera Icon SVG -->
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+            <rect x="4" y="13" width="40" height="28" rx="4" stroke="#00c2ff" stroke-width="2"/>
+            <circle cx="24" cy="27" r="8" stroke="#00c2ff" stroke-width="2"/>
+            <path d="M16 13l3-6h10l3 6" stroke="#00c2ff" stroke-width="2" stroke-linejoin="round"/>
+            <circle cx="37" cy="19" r="2" fill="#00c2ff"/>
+          </svg>
+          <span>Menunggu Stream</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHART -->
+    <div class="chart-panel panel">
+      <div class="panel-head">
+        <div class="panel-title"><span class="t-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)"></span>Suhu &amp; Kelembapan</div>
+        <div class="panel-icons">
+          <span style="color:var(--green);font-size:9px;padding:1px 6px;border:1px solid rgba(0,230,118,.25);border-radius:3px;">● Suhu</span>
+          <span style="color:var(--accent);font-size:9px;padding:1px 6px;border:1px solid rgba(0,194,255,.25);border-radius:3px;">● Kelembapan</span>
+        </div>
+      </div>
+      <div class="chart-body">
+        <canvas id="chart-main"></canvas>
+      </div>
+    </div>
+
+    <!-- BOTTOM: Controls / Sliders -->
+    <div class="water-panel panel">
+      <div class="panel-head">
+        <div class="panel-title"><span class="t-dot" style="background:var(--amber);box-shadow:0 0 6px var(--amber)"></span>Parameter Kontrol</div>
+        <div class="panel-icons"><span>⚙</span><span>↺</span></div>
+      </div>
+      <div class="water-sliders">
+        <div class="slider-item">
+          <div class="slider-name">pH Target</div>
+          <div class="slider-val" id="sl-ph">6.5</div>
+          <input type="range" class="vslider" min="4" max="9" step="0.1" value="65" oninput="this.previousElementSibling.textContent=(this.value/10).toFixed(1)"/>
+        </div>
+        <div class="slider-item">
+          <div class="slider-name">EC Target</div>
+          <div class="slider-val" id="sl-ec">1.8</div>
+          <input type="range" class="vslider" min="0" max="40" step="1" value="18" oninput="this.previousElementSibling.textContent=(this.value/10).toFixed(1)" style="--accent:#ffab00"/>
+        </div>
+        <div class="slider-item">
+          <div class="slider-name">Suhu Max</div>
+          <div class="slider-val">28</div>
+          <input type="range" class="vslider" min="18" max="35" value="28" oninput="this.previousElementSibling.textContent=this.value" style="--accent:var(--green)"/>
+        </div>
+        <div class="slider-item">
+          <div class="slider-name">Kelembapan</div>
+          <div class="slider-val">70</div>
+          <input type="range" class="vslider" min="40" max="95" value="70" oninput="this.previousElementSibling.textContent=this.value"/>
+        </div>
+        <div class="slider-item">
+          <div class="slider-name">Kecepatan Pompa</div>
+          <div class="slider-val">80</div>
+          <input type="range" class="vslider" min="0" max="100" value="80" oninput="this.previousElementSibling.textContent=this.value" style="--accent:var(--melon)"/>
+        </div>
+        <div class="slider-item">
+          <div class="slider-name">Lux Target</div>
+          <div class="slider-val">6000</div>
+          <input type="range" class="vslider" min="0" max="10000" step="100" value="6000" oninput="this.previousElementSibling.textContent=this.value" style="--accent:var(--amber)"/>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /center-top -->
+
+  <!-- ── RIGHT COLUMN ──────────────────────────── -->
+  <div class="col-right">
+
+    <!-- WATER LEVEL donut -->
+    <div class="panel" style="border-bottom:1px solid var(--border);flex:0 0 auto;">
+      <div class="panel-head">
+        <div class="panel-title"><span class="t-dot" style="background:var(--accent)"></span>Water Level</div>
+      </div>
+      <div class="panel-body" style="align-items:center;padding:10px 12px;flex-direction:row;gap:14px;">
+        <div style="position:relative;width:80px;height:80px;flex-shrink:0">
+          <svg viewBox="0 0 80 80" width="80" height="80">
+            <circle cx="40" cy="40" r="32" fill="none" stroke="#2a3040" stroke-width="8"/>
+            <circle id="water-ring" cx="40" cy="40" r="32" fill="none" stroke="#00c2ff" stroke-width="8"
+              stroke-dasharray="201" stroke-dashoffset="50"
+              stroke-linecap="round" transform="rotate(-90 40 40)"/>
+          </svg>
+          <div style="position:absolute;inset:0;display:grid;place-items:center;font-family:var(--mono);font-size:16px;color:var(--accent)" id="water-pct">75%</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Tangki Air</div>
+          <div style="font-family:var(--mono);font-size:13px;color:var(--text)">Vol: <span id="water-vol">750</span> L</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--muted)">Max: 1000 L</div>
+          <span class="metric-badge badge-ok">CUKUP</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- POMPA -->
+    <div class="toggle-row">
+      <div class="toggle-info">
+        <div class="toggle-name">Pompa Air</div>
+        <div class="toggle-status" id="st-pump" style="color:var(--green)">● Aktif</div>
+      </div>
+      <label class="toggle-wrap">
+        <input type="checkbox" id="sw-pump" checked onchange="handlePump(this)"/>
+        <div class="toggle-slider"></div>
+      </label>
+    </div>
+
+    <!-- LAMPU GROW -->
+    <div class="toggle-row">
+      <div class="toggle-info">
+        <div class="toggle-name">Lampu Grow Light</div>
+        <div class="toggle-status" id="st-lamp" style="color:var(--muted)">● Nonaktif</div>
+      </div>
+      <label class="toggle-wrap">
+        <input type="checkbox" id="sw-lamp" onchange="handleLamp(this)"/>
+        <div class="toggle-slider"></div>
+      </label>
+    </div>
+
+    <!-- KIPAS -->
+    <div class="toggle-row">
+      <div class="toggle-info">
+        <div class="toggle-name">Sirkulasi Udara</div>
+        <div class="toggle-status" id="st-fan" style="color:var(--green)">● Aktif</div>
+      </div>
+      <label class="toggle-wrap">
+        <input type="checkbox" id="sw-fan" checked onchange="
+          this.closest('.toggle-row').querySelector('.toggle-status').textContent=this.checked?'● Aktif':'● Nonaktif';
+          this.closest('.toggle-row').querySelector('.toggle-status').style.color=this.checked?'var(--green)':'var(--muted)';
+        "/>
+        <div class="toggle-slider"></div>
+      </label>
+    </div>
+
+    <!-- NUTRISI DONUT pairs -->
+    <div class="panel" style="border-top:1px solid var(--border);padding:10px 12px 8px;flex:0 0 auto;">
+      <div class="panel-head" style="padding:0 0 8px;border-bottom:none;">
+        <div class="panel-title" style="font-size:10px"><span class="t-dot" style="background:var(--melon);box-shadow:0 0 6px var(--melon)"></span>Sistem Irigasi</div>
+      </div>
+      <div class="donut-row">
+        <div class="donut-panel" style="border:none;padding:0;flex:1;">
+          <div class="donut-name">Sprinkler 1</div>
+          <svg class="donut-svg" viewBox="0 0 80 80">
+            <circle cx="40" cy="40" r="28" fill="none" stroke="#2a3040" stroke-width="10"/>
+            <circle cx="40" cy="40" r="28" fill="none" stroke="#00e676" stroke-width="10"
+              stroke-dasharray="176" stroke-dashoffset="0"
+              stroke-linecap="round" transform="rotate(-90 40 40)"/>
+            <text x="40" y="45" text-anchor="middle" font-family="var(--mono)" font-size="12" fill="#00e676">ON</text>
+          </svg>
+          <div class="donut-status" style="color:var(--green)">Aktif</div>
+        </div>
+        <div class="donut-panel" style="border:none;padding:0;flex:1;">
+          <div class="donut-name">Sprinkler 2</div>
+          <svg class="donut-svg" viewBox="0 0 80 80">
+            <circle cx="40" cy="40" r="28" fill="none" stroke="#2a3040" stroke-width="10"/>
+            <circle cx="40" cy="40" r="28" fill="none" stroke="#ff7043" stroke-width="10"
+              stroke-dasharray="176" stroke-dashoffset="88"
+              stroke-linecap="round" transform="rotate(-90 40 40)"/>
+            <text x="40" y="45" text-anchor="middle" font-family="var(--mono)" font-size="12" fill="#ff7043">OFF</text>
+          </svg>
+          <div class="donut-status" style="color:var(--melon)">Nonaktif</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EVENTS LOG -->
+    <div class="panel" style="border-top:1px solid var(--border);flex:1;overflow:hidden;">
+      <div class="panel-head">
+        <div class="panel-title"><span class="t-dot" style="background:var(--amber);box-shadow:0 0 6px var(--amber)"></span>Log Sistem</div>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:6px 12px;display:flex;flex-direction:column;gap:5px;" id="log-list">
+        <div class="log-entry" style="font-size:10px;display:flex;gap:8px;">
+          <span style="font-family:var(--mono);color:var(--muted);flex-shrink:0">14:52</span>
+          <span style="color:var(--green)">● pH stabil di 6.5</span>
+        </div>
+        <div class="log-entry" style="font-size:10px;display:flex;gap:8px;">
+          <span style="font-family:var(--mono);color:var(--muted);flex-shrink:0">14:50</span>
+          <span style="color:var(--accent)">● Pompa aktif</span>
+        </div>
+        <div class="log-entry" style="font-size:10px;display:flex;gap:8px;">
+          <span style="font-family:var(--mono);color:var(--muted);flex-shrink:0">14:47</span>
+          <span style="color:var(--amber)">⚠ Cahaya rendah</span>
+        </div>
+        <div class="log-entry" style="font-size:10px;display:flex;gap:8px;">
+          <span style="font-family:var(--mono);color:var(--muted);flex-shrink:0">14:44</span>
+          <span style="color:var(--text)">● Sistem dimulai</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="fill"></div>
+  </div>
+
+</div><!-- /dashboard -->
+
+<script>
+/* ══ CLOCK ════════════════════════════════════ */
+function tick(){
+  const now=new Date();
+  const ts=now.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  document.getElementById("clock-top").textContent=ts;
+  const full=now.toLocaleString("id-ID");
+  document.getElementById("cam-ts").textContent=full;
+  document.getElementById("sub-suhu").textContent=full;
+  document.getElementById("sub-hum").textContent=full;
+}
+tick(); setInterval(tick,1000);
+
+/* ══ CHART ════════════════════════════════════ */
+const ctx=document.getElementById("chart-main").getContext("2d");
+const chartMain=new Chart(ctx,{
+  type:"line",
+  data:{
+    labels:[],
+    datasets:[
+      {label:"Suhu",data:[],borderColor:"#00e676",backgroundColor:"rgba(0,230,118,.06)",
+       tension:.4,fill:true,pointRadius:2,pointBackgroundColor:"#00e676",borderWidth:1.5},
+      {label:"Kelembapan",data:[],borderColor:"#00c2ff",backgroundColor:"rgba(0,194,255,.05)",
+       tension:.4,fill:true,pointRadius:2,pointBackgroundColor:"#00c2ff",borderWidth:1.5}
+    ]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    animation:{duration:300},
+    plugins:{legend:{display:false},tooltip:{
+      backgroundColor:"#1a1f28",borderColor:"#2a3040",borderWidth:1,
+      titleColor:"#8899bb",bodyColor:"#dde3ee",padding:8,cornerRadius:6
+    }},
+    scales:{
+      x:{ticks:{color:"#5a6480",font:{size:9,family:"'Share Tech Mono'"}},grid:{color:"rgba(255,255,255,.04)"}},
+      y:{ticks:{color:"#5a6480",font:{size:9,family:"'Share Tech Mono'"}},grid:{color:"rgba(255,255,255,.04)"}},
+    }
+  }
+});
+
+/* ══ GAUGE HELPER ════════════════════════════ */
+function setGauge(fillId, needleId, pct){
+  const arc=173;
+  const el=document.getElementById(fillId);
+  if(el) el.style.strokeDashoffset=arc*(1-pct);
+  const angle=-90+pct*180;
+  const n=document.getElementById(needleId);
+  if(n) n.setAttribute("transform",`rotate(${angle},65,65)`);
+}
+
+/* ══ SENSOR UPDATE ═══════════════════════════ */
+function updateUI(d){
+  const T=d.suhu??24.3, H=d.kelembapan??68, L=d.cahaya??5420, PH=d.ph??6.5, EC=d.ec??1.8;
+  const ts=new Date().toLocaleString("id-ID");
+
+  // values
+  set("val-suhu",T.toFixed(1));
+  set("val-hum", Math.round(H));
+  set("val-lux", Math.round(L));
+  set("val-ph",  PH.toFixed(1));
+  set("val-ec",  EC.toFixed(2));
+
+  // gauges
+  setGauge("gauge-ph-fill","gauge-ph-needle",(PH-4)/6);
+  setGauge("gauge-ec-fill","gauge-ec-needle",EC/4);
+
+  // chart push
+  const t=new Date().toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  chartMain.data.labels.push(t);
+  chartMain.data.datasets[0].data.push(T);
+  chartMain.data.datasets[1].data.push(H);
+  if(chartMain.data.labels.length>15){
+    chartMain.data.labels.shift();
+    chartMain.data.datasets[0].data.shift();
+    chartMain.data.datasets[1].data.shift();
+  }
+  chartMain.update();
+}
+window._updateSensors=updateUI;
+
+function set(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
+
+/* ══ DEMO MODE ════════════════════════════════ */
+let dT=24.3,dH=68,dP=6.5,dE=1.8,dL=5420;
+setInterval(()=>{
+  dT=+(dT+(Math.random()-.5)*.3).toFixed(2);
+  dH=Math.round(dH+(Math.random()-.5)*1.5);
+  dP=+(dP+(Math.random()-.5)*.05).toFixed(2);
+  dE=+(dE+(Math.random()-.5)*.04).toFixed(2);
+  dL=Math.round(dL+(Math.random()-.5)*200);
+  updateUI({suhu:dT,kelembapan:dH,ph:Math.max(4,Math.min(10,dP)),ec:Math.max(0,Math.min(4,dE)),cahaya:Math.max(0,dL)});
+  // water level random drift
+  const pct=0.65+Math.random()*.2;
+  const ring=document.getElementById("water-ring");
+  if(ring) ring.style.strokeDashoffset=201*(1-pct);
+  set("water-pct",Math.round(pct*100)+"%");
+  set("water-vol",Math.round(pct*1000));
+},3000);
+
+// initial draw
+setGauge("gauge-ph-fill","gauge-ph-needle",(6.5-4)/6);
+setGauge("gauge-ec-fill","gauge-ec-needle",1.8/4);
+
+/* ══ CONTROLS ════════════════════════════════ */
+function handlePump(el){
+  const on=el.checked;
+  document.getElementById("st-pump").textContent=on?"● Aktif":"● Nonaktif";
+  document.getElementById("st-pump").style.color=on?"var(--green)":"var(--muted)";
+  if(window._setPump) window._setPump(on);
+  addLog(on?"● Pompa diaktifkan":"● Pompa dimatikan", on?"var(--green)":"var(--muted)");
+}
+function handleLamp(el){
+  const on=el.checked;
+  document.getElementById("st-lamp").textContent=on?"● Aktif":"● Nonaktif";
+  document.getElementById("st-lamp").style.color=on?"var(--amber)":"var(--muted)";
+  if(window._setLamp) window._setLamp(on);
+  addLog(on?"● Grow light ON":"● Grow light OFF", on?"var(--amber)":"var(--muted)");
+}
+function addLog(msg,color){
+  const list=document.getElementById("log-list");
+  const t=new Date().toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"});
+  const div=document.createElement("div");
+  div.style.cssText="font-size:10px;display:flex;gap:8px;";
+  div.innerHTML=`<span style="font-family:var(--mono);color:var(--muted);flex-shrink:0">${t}</span><span style="color:${color}">${msg}</span>`;
+  list.prepend(div);
+  while(list.children.length>12) list.lastChild.remove();
+}
+</script>
+</body>
+</html>
