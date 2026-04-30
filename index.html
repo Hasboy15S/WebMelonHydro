@@ -21,14 +21,18 @@
     Smart <em>&nbsp;Hydroponic</em>
   </div>
   <nav class="topbar-nav">
-    <a href="#" class="active">Dashboard</a>
-    <a href="#">Data Penyakit</a>
-    <a href="#">Grafik Pertumbuhan</a>
+    <a href="index.html" class="active">Dashboard</a>
+    <a href="datapenyakit.html">Data Penyakit</a>
+    <a href="dataperkembangan.html">Perkembangan</a>
   </nav>
   <div class="topbar-right">
     <div class="ico-btn">⚙</div>
     <div class="ico-btn">🔔</div>
     <div class="ico-btn">⬡</div>
+    <div id="fb-status" style="display:flex;align-items:center;gap:6px;padding:0 12px;border-left:1px solid var(--border);height:100%;">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--muted);box-shadow:none;transition:all .3s;" id="fb-dot"></div>
+      <span style="font-size:11px;color:var(--muted);font-family:var(--mono);" id="fb-text">Offline</span>
+    </div>
     <span id="clock-top">--:--:--</span>
   </div>
 </div>
@@ -124,31 +128,28 @@
   <!-- ── CENTER: TOP ───────────────────────────── -->
   <div class="center-top">
 
-    <!-- CAMERA FEED -->
     <div class="cam-panel panel">
       <div class="panel-head">
         <div class="panel-title"><span class="t-dot"></span>Kamera Tanaman</div>
         <div class="panel-icons"><span>⤢</span><span>⚙</span></div>
       </div>
-      <div class="cam-feed">
-        <div class="cam-overlay"></div>
-        <div class="cam-scanline"></div>
-        <div class="cam-info">
+      
+      <div class="cam-feed" style="position: relative; overflow: hidden; min-height: 240px;">
+        
+        <img src="https://championship-organisation-jumping-file.trycloudflare.com/video_feed" 
+             alt="Live AI Stream" 
+             style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; z-index: 0;">
+
+        <div class="cam-overlay" style="position: relative; z-index: 1;"></div>
+        <div class="cam-scanline" style="position: relative; z-index: 1;"></div>
+        
+        <div class="cam-info" style="position: relative; z-index: 2;">
           <span id="cam-ts">2025-04-24 14:52:00</span>
           <span>CAM-01 · AREA A</span>
-          <span>1080p · 30fps</span>
-        </div>
-        <div class="cam-rec"><div class="rdot"></div>REC</div>
-        <div class="cam-placeholder">
-          <!-- Camera Icon SVG -->
-          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-            <rect x="4" y="13" width="40" height="28" rx="4" stroke="#00c2ff" stroke-width="2"/>
-            <circle cx="24" cy="27" r="8" stroke="#00c2ff" stroke-width="2"/>
-            <path d="M16 13l3-6h10l3 6" stroke="#00c2ff" stroke-width="2" stroke-linejoin="round"/>
-            <circle cx="37" cy="19" r="2" fill="#00c2ff"/>
-          </svg>
-          <span>Menunggu Stream</span>
-        </div>
+          <span>AI Deteksi YOLO</span> </div>
+        
+        <div class="cam-rec" style="position: relative; z-index: 2;"><div class="rdot"></div>REC</div>
+        
       </div>
     </div>
 

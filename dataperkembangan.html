@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Data Perkembangan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" />
+<link rel="stylesheet" href="css/page.css" />
+</head>
+<body>
+<div class="page-topbar">
+  <div class="topbar-brand">
+    <div class="dot"></div>
+    Smart <em>Hydroponic</em>
+  </div>
+  <nav class="topbar-nav">
+    <a href="index.html">Dashboard</a>
+    <a href="datapenyakit.html">Data Penyakit</a>
+    <a href="dataperkembangan.html" class="active">Data Perkembangan</a>
+  </nav>
+</div>
+<main class="page-container">
+  <section class="page-header">
+    <div>
+      <h1 class="page-title">Data Perkembangan Tanaman</h1>
+      <p class="page-text">Pantau perkembangan tanaman hydroponic Anda secara real-time dari Firebase. Halaman ini menampilkan log pertumbuhan yang tersimpan pada node <code>growth</code> di database.</p>
+    </div>
+  </section>
+
+  <section class="overview-row" id="overview-row">
+    <div class="metric-card">
+      <div class="metric-label">Rekam Pertumbuhan</div>
+      <div class="metric-value" id="total-records">0</div>
+      <div class="metric-info">Jumlah catatan pertumbuhan yang ditemukan.</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Pembaharuan Terbaru</div>
+      <div class="metric-value" id="latest-update">-</div>
+      <div class="metric-info">Data terakhir yang dicatat di database.</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Fase Terbaru</div>
+      <div class="metric-value" id="latest-stage">-</div>
+      <div class="metric-info">Fase atau tahap pertumbuhan terakhir.</div>
+    </div>
+  </section>
+
+  <section class="card-grid" id="growth-grid">
+    <div class="empty-state">Memuat data perkembangan...</div>
+  </section>
+</main>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyBG3CCVIZbeytBzzlGqSFME3hGizQioMRI",
+  authDomain: "melonhydro-13b18.firebaseapp.com",
+  projectId: "melonhydro-13b18",
+  storageBucket: "melonhydro-13b18.firebasestorage.app",
+  messagingSenderId: "67286297774",
+  appId: "1:67286297774:web:4d13a46d2499a99a1d513f",
+  databaseURL: "https://melonhydro-13b18-default-rtdb.asia-southeast1.firebasedatabase.app"
+});
+
+const db = getDatabase(app);
+const growthRef = ref(db, "growth");
+const grid = document.getElementById("growth-grid");
+const totalRecords = document.getElementById("total-records");
+const latestUpdate = document.getElementById("latest-update");
+const latestStage = document.getElementById("latest-stage");
+
+onValue(growthRef, snap => {
+  const data = snap.val() || {};
+  renderGrowth(data);
+});
+
+function renderGrowth(data) {
+  const items = Object.entries(data).map(([key, item]) => ({ id: key, ...item }));
+  items.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+  totalRecords.textContent = items.length;
+  const latest = items[0];
+  latestUpdate.textContent = latest ? formatDate(latest.timestamp) : "-";
+  latestStage.textContent = latest ? (latest.fase || latest.stage || latest.phase || "-") : "-";
+
+  if (!items.length) {
+    grid.innerHTML = `<div class="empty-state">Belum ada data perkembangan pada node <code>growth</code>.</div>`;
+    return;
+  }
+
+  grid.innerHTML = items.map(item => {
+    const time = formatDate(item.timestamp);
+    const height = item.tinggi ?? item.height ?? item.ketinggian ?? "-";
+    const weight = item.berat ?? item.weight ?? item.bobot ?? "-";
+    const stage = item.fase || item.stage || item.phase || "-";
+    const notes = item.catatan || item.note || item.keterangan || "Tidak ada catatan tambahan.";
+    const plant = item.tanaman || item.plant || item.nama_tanaman || item.nama || `Rekam #${item.id}`;
+
+    return `
+      <article class="card">
+        <div class="card-image">
+          <span>Perkembangan</span>
+        </div>
+        <div class="card-body">
+          <div class="card-meta">${time}</div>
+          <h2 class="card-title">${plant}</h2>
+          <div class="card-row">
+            <div class="stat-item"><span>Tinggi</span><strong>${formatMetric(height)}</strong></div>
+            <div class="stat-item"><span>Berat</span><strong>${formatMetric(weight)}</strong></div>
+          </div>
+          <div class="card-row">
+            <div class="stat-item"><span>Fase</span><strong>${stage}</strong></div>
+            <div class="stat-item"><span>ID Rekam</span><strong>${item.id}</strong></div>
+          </div>
+          <p class="card-note">${escapeHtml(notes)}</p>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+function formatDate(ts) {
+  if (!ts) return "-";
+  const date = new Date(ts * 1000);
+  if (isNaN(date)) return "-";
+  return date.toLocaleString("id-ID", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+
+function formatMetric(value) {
+  if (value === "-" || value == null) return "-";
+  return value;
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"'`]/g, ch => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;','`':'&#96;'
+  })[ch]);
+}
+</script>
+</body>
+</html>

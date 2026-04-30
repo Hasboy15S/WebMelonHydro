@@ -1,90 +1,140 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Data Penyakit</title>
-
-<style>
-body {
-  background:#0f172a;
-  color:white;
-  font-family:Arial;
-}
-
-.grid {
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
-  gap:20px;
-  padding:20px;
-}
-
-.card {
-  background:#1e293b;
-  border-radius:12px;
-  overflow:hidden;
-  transition:0.3s;
-}
-
-.card:hover {
-  transform:scale(1.03);
-}
-
-img {
-  width:100%;
-  height:180px;
-  object-fit:cover;
-}
-
-.content {
-  padding:10px;
-}
-
-.badge {
-  background:red;
-  padding:3px 8px;
-  border-radius:5px;
-  font-size:12px;
-}
-</style>
-
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" />
+<link rel="stylesheet" href="css/page.css" />
 </head>
-
 <body>
+<div class="page-topbar">
+  <div class="topbar-brand">
+    <div class="dot"></div>
+    Smart <em>Hydroponic</em>
+  </div>
+  <nav class="topbar-nav">
+    <a href="index.html">Dashboard</a>
+    <a href="datapenyakit.html" class="active">Data Penyakit</a>
+    <a href="dataperkembangan.html">Perkembangan</a>
+  </nav>
+</div>
+<main class="page-container">
+  <section class="page-header">
+    <div>
+      <h1 class="page-title">Data Penyakit Tanaman</h1>
+      <p class="page-text">Lihat daftar rekaman penyakit yang tersimpan pada node <code>penyakit_logs</code> di Firebase Realtime Database.</p>
+    </div>
+  </section>
 
-<h1 style="text-align:center;">🦠 Log Penyakit Tanaman</h1>
+  <section class="overview-row" id="summary-row">
+    <div class="metric-card">
+      <div class="metric-label">Total Deteksi</div>
+      <div class="metric-value" id="total-detections">0</div>
+      <div class="metric-info">Jumlah entri penyakit yang tersedia.</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Deteksi Terbaru</div>
+      <div class="metric-value" id="last-detection">-</div>
+      <div class="metric-info">Waktu catatan terakhir dari database.</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Penyakit Teratas</div>
+      <div class="metric-value" id="top-disease">-</div>
+      <div class="metric-info">Penyakit dengan frekuensi tertinggi.</div>
+    </div>
+  </section>
 
-<div class="grid" id="list"></div>
+  <section class="card-grid" id="list">
+    <div class="empty-state">Memuat catatan penyakit...</div>
+  </section>
+</main>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
 
 const app = initializeApp({
-  apiKey:"API_KEY_KAMU",
-  databaseURL:"URL_DATABASE_KAMU"
+  apiKey: "AIzaSyBG3CCVIZbeytBzzlGqSFME3hGizQioMRI",
+  authDomain: "melonhydro-13b18.firebaseapp.com",
+  projectId: "melonhydro-13b18",
+  storageBucket: "melonhydro-13b18.firebasestorage.app",
+  messagingSenderId: "67286297774",
+  appId: "1:67286297774:web:4d13a46d2499a99a1d513f",
+  databaseURL: "https://melonhydro-13b18-default-rtdb.asia-southeast1.firebasedatabase.app"
 });
 
 const db = getDatabase(app);
+const list = document.getElementById("list");
+const totalDetections = document.getElementById("total-detections");
+const lastDetection = document.getElementById("last-detection");
+const topDisease = document.getElementById("top-disease");
 
-onValue(ref(db,"penyakit_logs"), snap => {
-  const data = snap.val();
-  const container = document.getElementById("list");
-  container.innerHTML = "";
+onValue(ref(db, "penyakit_logs"), snap => {
+  const data = snap.val() || {};
+  const records = Object.entries(data).map(([id, item]) => ({ id, ...item }));
+  records.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
-  Object.values(data || {}).reverse().forEach(item => {
-    container.innerHTML += `
-      <div class="card">
-        <img src="${item.image_url}">
-        <div class="content">
-          <h3>${item.penyakit}</h3>
-          <span class="badge">${(item.confidence*100).toFixed(1)}%</span>
-          <p>${item.tanaman_id}</p>
-          <small>${new Date(item.timestamp*1000).toLocaleString()}</small>
+  totalDetections.textContent = records.length;
+  if (!records.length) {
+    lastDetection.textContent = "-";
+    topDisease.textContent = "-";
+    list.innerHTML = `<div class="empty-state">Belum ada record penyakit pada node <code>penyakit_logs</code>.</div>`;
+    return;
+  }
+
+  lastDetection.textContent = formatDate(records[0].timestamp);
+  topDisease.textContent = calcTopDisease(records);
+
+  list.innerHTML = records.map(item => {
+    const imageUrl = item.image_url || item.gambar || "";
+    const disease = item.penyakit || item.nama_penyakit || "Tidak Diketahui";
+    const confidence = item.confidence != null ? `${(item.confidence * 100).toFixed(1)}%` : "-";
+    const plantId = item.tanaman_id || item.plant_id || item.id_tanaman || "-";
+    const notes = item.catatan || item.note || item.keterangan || "Tidak ada keterangan tambahan.";
+    const timestamp = formatDate(item.timestamp);
+
+    return `
+      <article class="card">
+        <div class="card-image">
+          ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(disease)}">` : `<div><span>Tanaman</span></div>`}
         </div>
-      </div>
+        <div class="card-body">
+          <div class="card-meta">${timestamp}</div>
+          <h2 class="card-title">${escapeHtml(disease)}</h2>
+          <div class="card-row">
+            <div class="stat-item"><span>Confidence</span><strong>${confidence}</strong></div>
+            <div class="stat-item"><span>ID Tanaman</span><strong>${escapeHtml(plantId)}</strong></div>
+          </div>
+          <p class="card-note">${escapeHtml(notes)}</p>
+        </div>
+      </article>
     `;
-  });
+  }).join("");
 });
-</script>
 
+function calcTopDisease(records) {
+  const counter = records.reduce((acc, item) => {
+    const key = item.penyakit || item.nama_penyakit || "Tidak Diketahui";
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+  return Object.entries(counter).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
+}
+
+function formatDate(ts) {
+  if (!ts) return "-";
+  const d = new Date(ts * 1000);
+  if (isNaN(d)) return "-";
+  return d.toLocaleString("id-ID", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"'`]/g, ch => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;','`':'&#96;'
+  })[ch]);
+}
+</script>
 </body>
 </html>
